@@ -2,6 +2,8 @@
 
 Aplicación universitaria que simula peces y peceras y usa XGBoost para estimar el riesgo de muerte. Para explicar los datos, el entrenamiento y los resultados, lee [EXPLICACION_MACHINE_LEARNING.md](EXPLICACION_MACHINE_LEARNING.md).
 
+También incluye **Ventas y demanda**: historial comercial simulado de dos años, pronóstico a una–cuatro semanas por especie y evaluación temporal. La explicación y los comandos para repetir el experimento están en [DEMANDA.md](proycto%20innovador/documentacion/DEMANDA.md). Usa las dependencias existentes; los archivos generados ya están incluidos.
+
 ## 1. Qué instalar
 
 Instrucciones para **Windows**. El proyecto se comprobó con Python 3.13.7 y Node.js 22.22.3.
@@ -77,6 +79,7 @@ El iniciador intenta instalar Python si falta `.venv` y construir React si falta
 3. En **Vista general**, consulta las tablas y gráficas por pecera y abre el detalle de un pez para ver su riesgo y las condiciones registradas.
 4. En **Estadísticas de corrida** y **Seguimiento de alertas**, revisa mortalidad, avisos pendientes, aciertos y errores. Puedes registrar que revisaste una alerta.
 5. Con **Exportar Excel** descarga el detalle, historial, estadísticas y evaluación. También se guarda una copia en `proycto innovador/resultados/exportaciones`.
+6. En **Ventas y demanda**, pulsa **Iniciar simulación de ventas**: avanza **una semana por segundo** y recorre 52 semanas nuevas. Usa pausa, reanudación, velocidad y consulta de semanas anteriores. Filtra una especie y un plazo de una–cuatro semanas para revisar pronósticos y errores. **Descargar todos los datos** entrega un ZIP con CSV para Excel y metadatos; con una sesión seleccionada incluye sus predicciones emitidas y resultados. Las sesiones se conservan en `proycto innovador/datos/ventas/en_vivo.db`; al reiniciar el servidor se recuperan en pausa.
 
 El reloj sigue si cierras la pestaña mientras el servidor esté encendido. Si reinicias el servidor, la corrida en vivo se recupera en pausa. Ejecuta solo un servidor de esta aplicación a la vez.
 

@@ -120,3 +120,7 @@ No se ha demostrado con estos datos una reducción real de mortalidad o costos d
 - `proycto innovador/simulacion/datos_base/intervalos_por_corrida.csv`: intervalos.
 - `proycto innovador/web/backend/live.py` y `analysis.py`: predicciones en vivo y seguimiento.
 - `proycto innovador/documentacion/GUIA_PRESENTACION.md`: recorrido práctico para exponer.
+
+## Pronóstico comercial añadido
+
+Para el nuevo experimento de pedidos, ventas, stock y pronóstico semanal, consulta [DEMANDA.md](proycto%20innovador/documentacion/DEMANDA.md). Allí se explican los modelos entrenados, el método seleccionado y los errores de la prueba temporal.

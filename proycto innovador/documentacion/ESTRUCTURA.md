@@ -11,6 +11,9 @@ La carpeta principal conserva `INICIAR.bat`, `iniciar.ps1`, las dependencias y e
 | `simulacion/modelos` | Modelos XGBoost calibrados a 1, 6 y 12 horas. |
 | `simulacion/datos_base` | Insumos y evaluaciones del experimento local v3. |
 | `datos/corridas` | CSV de corridas, checkpoints en vivo y respaldo SQLite inicial. |
+| `demanda` | Generador comercial, entrenamiento, evaluación y modelos del pronóstico semanal. |
+| `datos/ventas` | Historial comercial inicial en CSV y sesiones semanales en vivo en `en_vivo.db` (SQLite). |
+| `resultados/demanda` | Pronósticos, evaluación temporal, calibración e informe comercial. |
 | `resultados/exportaciones` | Excel y capturas generados por la aplicación. |
 | `resultados/simulaciones` | Resultados CSV del motor ejecutado de forma independiente. |
 | `logs` | Registros del servidor. |

@@ -1,0 +1,286 @@
+{
+  "version": "demanda_v1",
+  "semilla": 20261114,
+  "origen": "simulado",
+  "objetivo": "Peces solicitados por especie y semana, incluyendo pedidos no atendidos por falta de stock.",
+  "modelo": "media4",
+  "nombre_modelo": "Promedio de 4 semanas",
+  "especies": [
+    "Tilapia",
+    "Carpa",
+    "Trucha arcoíris",
+    "Guppy",
+    "Tetra neón",
+    "Gamitana",
+    "Goldfish"
+  ],
+  "filas_diarias": 5096,
+  "semanas": 104,
+  "fecha_corte": "2026-11-08",
+  "comparacion": [
+    {
+      "modelo": "ultima",
+      "nombre": "Última semana",
+      "wape_validacion": 0.18717323109097248,
+      "seleccionado": false,
+      "n": 112,
+      "mae": 25.714285714285715,
+      "rmse": 31.13105936428854,
+      "wape": 0.16313583323892603,
+      "sesgo": 0.011215588535176164,
+      "dentro_20pct": 0.6517857142857143
+    },
+    {
+      "modelo": "media4",
+      "nombre": "Promedio de 4 semanas",
+      "wape_validacion": 0.1759697256385998,
+      "seleccionado": true,
+      "n": 112,
+      "mae": 27.21875,
+      "rmse": 34.218507419231486,
+      "wape": 0.17268041237113402,
+      "sesgo": 0.06570748838790076,
+      "dentro_20pct": 0.625
+    },
+    {
+      "modelo": "rf",
+      "nombre": "Random Forest",
+      "wape_validacion": 0.1872463120771516,
+      "seleccionado": false,
+      "n": 112,
+      "mae": 29.053632748427344,
+      "rmse": 36.809693302690675,
+      "wape": 0.18432122282903945,
+      "sesgo": 0.05313431514109982,
+      "dentro_20pct": 0.6428571428571429
+    },
+    {
+      "modelo": "boosting",
+      "nombre": "Gradient Boosting",
+      "wape_validacion": 0.19132229855141006,
+      "seleccionado": false,
+      "n": 112,
+      "mae": 28.854652724677408,
+      "rmse": 37.390337107663356,
+      "wape": 0.1830588594745593,
+      "sesgo": 0.05059632073570277,
+      "dentro_20pct": 0.625
+    }
+  ],
+  "por_especie": [
+    {
+      "especie_nombre": "Carpa",
+      "n": 16,
+      "mae": 25.28125,
+      "rmse": 31.98461544242794,
+      "wape": 0.17220093656875265,
+      "sesgo": 0.005108556832694764,
+      "dentro_20pct": 0.6875,
+      "cobertura_intervalo": 0.9375
+    },
+    {
+      "especie_nombre": "Gamitana",
+      "n": 16,
+      "mae": 26.71875,
+      "rmse": 30.41047311371528,
+      "wape": 0.18222506393861893,
+      "sesgo": -0.0012787723785166241,
+      "dentro_20pct": 0.625,
+      "cobertura_intervalo": 1.0
+    },
+    {
+      "especie_nombre": "Goldfish",
+      "n": 16,
+      "mae": 29.6875,
+      "rmse": 40.838860170185946,
+      "wape": 0.17592592592592593,
+      "sesgo": 0.03851851851851852,
+      "dentro_20pct": 0.6875,
+      "cobertura_intervalo": 0.9375
+    },
+    {
+      "especie_nombre": "Guppy",
+      "n": 16,
+      "mae": 30.71875,
+      "rmse": 34.15612134010535,
+      "wape": 0.2908284023668639,
+      "sesgo": 0.17455621301775148,
+      "dentro_20pct": 0.25,
+      "cobertura_intervalo": 0.9375
+    },
+    {
+      "especie_nombre": "Tetra neón",
+      "n": 16,
+      "mae": 24.9375,
+      "rmse": 28.785304410410532,
+      "wape": 0.12492172824045085,
+      "sesgo": 0.09643080776455855,
+      "dentro_20pct": 0.75,
+      "cobertura_intervalo": 1.0
+    },
+    {
+      "especie_nombre": "Tilapia",
+      "n": 16,
+      "mae": 18.125,
+      "rmse": 26.231838955742315,
+      "wape": 0.13151927437641722,
+      "sesgo": 0.10521541950113379,
+      "dentro_20pct": 0.6875,
+      "cobertura_intervalo": 0.9375
+    },
+    {
+      "especie_nombre": "Trucha arcoíris",
+      "n": 16,
+      "mae": 35.0625,
+      "rmse": 43.558868213028674,
+      "wape": 0.17697160883280758,
+      "sesgo": 0.06687697160883281,
+      "dentro_20pct": 0.6875,
+      "cobertura_intervalo": 1.0
+    }
+  ],
+  "por_horizonte": [
+    {
+      "horizonte_semanas": 1,
+      "n": 28,
+      "mae": 31.125,
+      "rmse": 36.55279938468657,
+      "wape": 0.19654939106901217,
+      "sesgo": 0.06078033378439333,
+      "dentro_20pct": 0.6071428571428571,
+      "cobertura_intervalo": 0.8928571428571429
+    },
+    {
+      "horizonte_semanas": 2,
+      "n": 28,
+      "mae": 25.142857142857142,
+      "rmse": 30.98012035391175,
+      "wape": 0.1549977983267283,
+      "sesgo": 0.03555702333773668,
+      "dentro_20pct": 0.6428571428571429,
+      "cobertura_intervalo": 1.0
+    },
+    {
+      "horizonte_semanas": 3,
+      "n": 28,
+      "mae": 27.339285714285715,
+      "rmse": 36.31754790337979,
+      "wape": 0.1748116008221055,
+      "sesgo": 0.07410367663850194,
+      "dentro_20pct": 0.6428571428571429,
+      "cobertura_intervalo": 1.0
+    },
+    {
+      "horizonte_semanas": 4,
+      "n": 28,
+      "mae": 25.267857142857142,
+      "rmse": 32.69228829992961,
+      "wape": 0.16457315654803442,
+      "sesgo": 0.09409164922074902,
+      "dentro_20pct": 0.6071428571428571,
+      "cobertura_intervalo": 0.9642857142857143
+    }
+  ],
+  "test": {
+    "n": 112,
+    "mae": 27.21875,
+    "rmse": 34.218507419231486,
+    "wape": 0.17268041237113402,
+    "sesgo": 0.06570748838790076,
+    "dentro_20pct": 0.625,
+    "cobertura_intervalo": 0.9642857142857143
+  },
+  "protocolo": [
+    {
+      "etapa": "Entrenamiento",
+      "inicio": "2024-11-11",
+      "fin": "2025-12-07",
+      "semanas": 56,
+      "uso": "Ajustar candidatos"
+    },
+    {
+      "etapa": "Validación",
+      "inicio": "2025-12-08",
+      "fin": "2026-03-29",
+      "semanas": 16,
+      "uso": "Elegir por menor WAPE"
+    },
+    {
+      "etapa": "Calibración",
+      "inicio": "2026-03-30",
+      "fin": "2026-07-19",
+      "semanas": 16,
+      "uso": "Estimar amplitud de intervalos"
+    },
+    {
+      "etapa": "Prueba reservada",
+      "inicio": "2026-07-20",
+      "fin": "2026-11-08",
+      "semanas": 16,
+      "uso": "Medir errores después de fijar modelo e intervalos"
+    }
+  ],
+  "cobertura_objetivo": 0.9,
+  "radios": {
+    "1": 0.38845553822152884,
+    "2": 0.6338028169014085,
+    "3": 0.4883720930232558,
+    "4": 0.40888208269525267
+  },
+  "supuestos": [
+    {
+      "especie_nombre": "Tilapia",
+      "pedidos_diarios_base": 20.45,
+      "precio_base_pen": 10.27,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    },
+    {
+      "especie_nombre": "Carpa",
+      "pedidos_diarios_base": 23.29,
+      "precio_base_pen": 22.77,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    },
+    {
+      "especie_nombre": "Trucha arcoíris",
+      "pedidos_diarios_base": 21.69,
+      "precio_base_pen": 12.03,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    },
+    {
+      "especie_nombre": "Guppy",
+      "pedidos_diarios_base": 15.44,
+      "precio_base_pen": 19.55,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    },
+    {
+      "especie_nombre": "Tetra neón",
+      "pedidos_diarios_base": 25.25,
+      "precio_base_pen": 11.81,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    },
+    {
+      "especie_nombre": "Gamitana",
+      "pedidos_diarios_base": 17.89,
+      "precio_base_pen": 14.71,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    },
+    {
+      "especie_nombre": "Goldfish",
+      "pedidos_diarios_base": 25.22,
+      "precio_base_pen": 20.33,
+      "nota": "Parámetros inventados para el experimento; no son precios ni ventas de Pisciber."
+    }
+  ],
+  "limitaciones": [
+    "Todos los pedidos, ventas, precios, reposiciones y mermas son simulados.",
+    "La demanda se mide con pedidos registrados, incluidos los no atendidos; las ventas pueden quedar limitadas por el stock.",
+    "Los cortes avanzan cada cuatro semanas: cada semana objetivo se evalúa una sola vez por especie.",
+    "La selección usa validación; la calibración de intervalos usa otro período; el test se conserva separado.",
+    "Durante la prueba el modelo permanece fijo y recibe solo el historial ya observado en cada corte.",
+    "Los intervalos son empíricos por especie y semana. Su cobertura futura no está garantizada en series temporales.",
+    "El modelo de uso se reajusta con las 104 semanas. Las métricas mostradas corresponden al modelo congelado de evaluación.",
+    "No se suman intervalos individuales para afirmar cobertura de un total; los totales muestran únicamente estimaciones centrales.",
+    "El stock comercial es independiente de las corridas de mortalidad, que representan otros períodos y poblaciones.",
+    "Las cantidades futuras son estimaciones de demanda, no compras confirmadas ni promesas de venta."
+  ]
+}

@@ -12,6 +12,8 @@ from .storage import ROOT, Session, Run, as_dict, engine
 from .export import excel
 from . import live
 from . import analysis
+from . import demand
+from . import demand_live
 
 @asynccontextmanager
 async def lifespan(app):
@@ -22,7 +24,9 @@ async def lifespan(app):
         s.commit()
     service.initialize()
     live.recover()
+    demand_live.recover()
     yield
+    demand_live.shutdown()
     live.shutdown()
 
 app=FastAPI(title='Pisciber · Mortalidad',version='2.0.0',lifespan=lifespan)
@@ -240,6 +244,49 @@ def export(rid:int,hora:int=Query(48,ge=0,le=96),horizonte:Horizon=12):
     path.write_bytes(blob)
     return Response(blob,media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         headers={'Content-Disposition':f'attachment; filename="{path.name}"'})
+
+@app.get('/api/demanda/resumen')
+def demand_summary(especie:str|None=Query(None,max_length=80),semanas:int=Query(4,ge=1,le=4)):
+    try:return demand.resumen(especie,semanas)
+    except FileNotFoundError as exc:raise HTTPException(503,str(exc))
+
+@app.get('/api/demanda/exportar')
+def demand_export():
+    try:blob=demand.exportar()
+    except FileNotFoundError as exc:raise HTTPException(503,str(exc))
+    return Response(blob,media_type='application/zip',headers={
+        'Content-Disposition':'attachment; filename="Pisciber_demanda_simulada.zip"'})
+
+class CommercialStart(BaseModel):
+    segundos:float=Field(1.,ge=.1,le=5,allow_inf_nan=False)
+
+class CommercialControl(BaseModel):
+    accion:Literal['pausar','reanudar','velocidad']
+    segundos:float|None=Field(None,ge=.1,le=5,allow_inf_nan=False)
+    sesion:int=Field(ge=1)
+
+@app.post('/api/demanda/vivo',status_code=201)
+def commercial_start(body:CommercialStart):
+    try:return demand_live.create(body.segundos)
+    except FileNotFoundError as exc:raise HTTPException(503,str(exc))
+    except (ValueError,AssertionError) as exc:raise HTTPException(409,str(exc))
+
+@app.post('/api/demanda/vivo/control')
+def commercial_control(body:CommercialControl):
+    try:return demand_live.control(body.accion,body.segundos,body.sesion)
+    except ValueError as exc:raise HTTPException(409,str(exc))
+
+@app.get('/api/demanda/vivo/vista')
+def commercial_view(especie:str|None=Query(None,max_length=80),semanas:int=Query(4,ge=1,le=4),
+                    paso:int|None=Query(None,ge=0,le=52),sesion:int|None=Query(None,ge=1)):
+    try:return demand_live.view(especie,semanas,paso,sesion)
+    except FileNotFoundError as exc:raise HTTPException(503,str(exc))
+
+@app.get('/api/demanda/vivo/exportar')
+def commercial_export(sesion:int|None=Query(None,ge=1)):
+    blob=demand_live.export(sesion)
+    return Response(blob,media_type='application/zip',headers={
+        'Content-Disposition':'attachment; filename="Pisciber_ventas_en_vivo.zip"'})
 
 DIST=ROOT/'web/frontend/dist'
 if DIST.exists():
