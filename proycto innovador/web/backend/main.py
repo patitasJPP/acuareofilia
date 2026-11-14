@@ -37,12 +37,21 @@ async def invalid(_,exc):
     return JSONResponse(status_code=404,content={'detail':str(exc)})
 
 @app.get('/api/health')
-def health():return {'estado':'lista','modelo':'XGBoost local v3','base_datos':engine.dialect.name}
+def health():return {'estado':'lista','modelo':f'XGBoost local {service.current_version()}','base_datos':engine.dialect.name}
 
 @app.get('/api/corridas')
 def runs():
     states=live.statuses()
-    with Session() as s:return [as_dict(r)|({'vivo':states[r.id]} if r.id in states else {}) for r in s.query(Run).order_by(Run.id.desc()).all()]
+    with Session() as s:rows=[as_dict(r) for r in s.query(Run).order_by(Run.id.desc()).all()]
+    for row in rows:
+        row['duracion_horas']=96
+        row['incidente']=None
+        if row['id'] in states:
+            row['vivo']=states[row['id']]
+            config=live.details(row['id'],0)['configuracion']
+            if config and row['escenario']!='estable':
+                row['incidente']={'inicio':config['inicio'],'fin':config['inicio']+config['duracion'],'duracion':config['duracion']}
+    return rows
 
 @app.get('/api/resumen/{rid}')
 def overview(rid:int,hora:int=Query(48,ge=0,le=96),horizonte:Horizon=12):
@@ -128,12 +137,12 @@ class Simulation(BaseModel):
     configuracion:SimulationConfig|None=None
 
 class LiveSimulation(Simulation):
-    segundos:float=Field(1.,ge=.5,le=10)
+    segundos:float=Field(1.,ge=0,le=10,allow_inf_nan=False)
     iniciar_pausada:bool=False
 
 class LiveControl(BaseModel):
     accion:Literal['pausar','reanudar','velocidad']
-    segundos:float|None=Field(None,ge=.5,le=10)
+    segundos:float|None=Field(None,ge=0,le=10,allow_inf_nan=False)
 
 @app.post('/api/vivo',status_code=201)
 def create_live(body:LiveSimulation):
@@ -156,7 +165,7 @@ def live_view(rid:int,horizonte:Horizon=12,hora:int|None=Query(None,ge=0,le=96))
     if not r.get('vivo'):raise HTTPException(409,'La corrida seleccionada no es incremental')
     state=r['vivo'];cut=state['hora'] if hora is None else hora
     return {'vivo':state,'resumen':service.snapshot_data(r,d,cut,horizonte),
-        'historial':service.timeline_data(d,horizonte,maximum=state['hora'])}
+        'historial':service.timeline_data(d,horizonte,maximum=state['hora'],context=r)}
 
 @app.get('/api/configuracion-simulador')
 def simulation_options():
@@ -202,7 +211,8 @@ def paired(rid:int,other:int):
 def evaluation_v2():
     import json
     from .paths import ROOT
-    path=ROOT/'resultados/validacion_motor_v2/informe.json'
+    path=ROOT/'resultados/entrenamiento_v4/informe.json'
+    if not path.exists():path=ROOT/'resultados/validacion_motor_v2/informe.json'
     if not path.exists():return {'estado':'pendiente','nota':'Todavía no hay una evaluación del modelo sobre el motor v2.'}
     return json.loads(path.read_text(encoding='utf-8'))
 

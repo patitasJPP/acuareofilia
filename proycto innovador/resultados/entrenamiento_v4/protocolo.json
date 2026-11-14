@@ -1,0 +1,44 @@
+{
+  "version": "v4",
+  "semilla_base": 471140000,
+  "corridas": 96,
+  "roles": [
+    "train",
+    "train",
+    "train",
+    "train",
+    "train",
+    "train",
+    "train",
+    "train",
+    "train",
+    "train",
+    "calibracion",
+    "calibracion",
+    "validacion",
+    "validacion",
+    "test",
+    "test"
+  ],
+  "regla_semilla": "base + escenario*10000 + replica*101",
+  "seleccion": "F1 en validación sujeto a recall >= 65 %",
+  "configuraciones": [
+    {
+      "max_depth": 3,
+      "n_estimators": 180
+    },
+    {
+      "max_depth": 4,
+      "n_estimators": 240
+    }
+  ],
+  "calibracion": "Platt en corridas exclusivas de calibración",
+  "comparador": "v3 sin modificar sobre el mismo test nuevo",
+  "horizontes": [
+    1,
+    6,
+    12
+  ],
+  "motor_sha256": "e02fcee7c2532076930c8ec65231e769e45103ac7c094037f8ea98e42653ffb7",
+  "nota": "No se usan las 36 corridas previamente evaluadas ni datos posteriores a t. Sin intervenciones programadas."
+}

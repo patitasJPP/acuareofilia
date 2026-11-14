@@ -18,6 +18,7 @@ from .storage import Base
 from .paths import SEED
 from simulacion.motor.realistic_engine import RealisticEngine, DEFAULT_CONFIG
 from simulacion.motor.features import prepare
+from simulacion.motor.features import IncrementalFeatures
 
 
 class PhysicsTests(unittest.TestCase):
@@ -80,6 +81,53 @@ class PhysicsTests(unittest.TestCase):
                 previous[i]=tank.temp
         with self.assertRaises(ValueError):engine.step()
 
+    def test_incremental_features_match_full_history(self):
+        engine=self.engine(sensores='intermitente');cache=IncrementalFeatures();raw=[];incremental=[]
+        for _ in range(97):
+            rows=engine.step();raw.extend(rows)
+            if rows:
+                obs,x=cache.update(rows)
+                x['prediccion_disponible']=obs.prediccion_disponible
+                x['calidad_prediccion']=obs.calidad_prediccion
+                incremental.append(x)
+        original,expected,names=prepare(pd.DataFrame(raw))
+        got=pd.concat(incremental).sort_values(['corrida_id','pez_id','hora_sim']).reset_index(drop=True)
+        pd.testing.assert_frame_equal(got[names],expected[names],check_dtype=False,rtol=1e-10,atol=1e-10)
+        self.assertEqual(list(got.prediccion_disponible),list(original.prediccion_disponible))
+        self.assertEqual(list(got.calidad_prediccion),list(original.calidad_prediccion))
+
+    def test_api_speed_limits(self):
+        from .main import LiveControl
+        from pydantic import ValidationError
+        for speed in [0,.1,.25,.5,1,5,10]:
+            self.assertEqual(LiveControl(accion='velocidad',segundos=speed).segundos,speed)
+        for speed in [-1,11,float('nan'),float('inf')]:
+            with self.assertRaises(ValidationError):LiveControl(accion='velocidad',segundos=speed)
+
+    def test_per_tank_curves_match_global_and_respect_tank_filter(self):
+        engine=self.engine();raw=[]
+        for _ in range(5):raw.extend(engine.step())
+        d=pd.DataFrame(raw);d['riesgo_1h']=(d.pecera_id+1)*.1;d['alerta_1h']=True
+        timeline=service.timeline_data(d,1,maximum=4)
+        for point in timeline:
+            tanks=point['peceras']
+            self.assertEqual(sum(t['vivos'] for t in tanks.values()),point['vivos'])
+            self.assertAlmostEqual(sum(t['esperadas'] for t in tanks.values()),point['esperadas'])
+        selected=service.timeline_data(d,1,tid=1,maximum=4)
+        for global_point,tank_point in zip(timeline,selected):
+            self.assertEqual(global_point['peceras']['1'],tank_point)
+
+    def test_saved_threshold_is_used_in_evaluation(self):
+        d=pd.DataFrame({'riesgo_12h':[.2,.8,.6,.4], 'observado_12h':[0,1,0,1],
+                        'alerta_12h':[False,True,False,False],'umbral_12h':[.7]*4,
+                        'corrida_id':[0]*4,'pez_id':[0,1,2,3]})
+        m=service.evaluate(d,12)
+        self.assertEqual((m['tp'],m['fp'],m['fn'],m['tn']),(1,0,1,2))
+        d.loc[0,'umbral_12h']=np.nan
+        d.loc[0,'alerta_12h']=True
+        m=service.evaluate(d,12)
+        self.assertEqual((m['tp'],m['fp'],m['fn'],m['tn']),(1,1,1,1))
+
 
 class ControlTests(unittest.TestCase):
     def setUp(self):
@@ -114,6 +162,30 @@ class ControlTests(unittest.TestCase):
         live.control(a['id'],'reanudar');live.control(b['id'],'reanudar')
         self.assertEqual(live.read(a['id'])[1]['estado'],'pausada')
         self.await_hour(b['id'],1)
+
+    def test_maximum_speed_pause_preserves_all_hours(self):
+        rid=self.create()['id']
+        live.control(rid,'velocidad',0);live.control(rid,'reanudar')
+        self.await_hour(rid,6);live.control(rid,'pausar')
+        d,state,_=live.read(rid)
+        self.assertEqual(state['segundos'],0)
+        self.assertEqual(sorted(d.hora_sim.unique()),list(range(state['hora']+1)))
+        self.assertEqual(state['estado'],'pausada')
+
+    def test_model_version_and_threshold_persist_after_resume_and_restart(self):
+        rid=self.create()['id'];first,state,_=live.read(rid)
+        version=state['modelo_version']
+        for h in [1,6,12]:
+            expected=service.models(version)[h]['umbrales']['F2']
+            self.assertTrue(first[f'umbral_{h}h'].eq(expected).all())
+        live.control(rid,'velocidad',0);live.control(rid,'reanudar')
+        self.await_hour(rid,2);live.control(rid,'pausar')
+        d,_,_=live.read(rid)
+        for h in [1,6,12]:
+            np.testing.assert_array_equal(first[f'riesgo_{h}h'],d.loc[d.hora_sim.eq(0),f'riesgo_{h}h'])
+        new=live.restart(rid)
+        self.assertEqual(new['vivo']['modelo_version'],version)
+        self.assertEqual(new['vivo']['modelos_horizontes'],state['modelos_horizontes'])
 
     def test_restart_finished_and_paused_preserves_original(self):
         row=self.create();rid=row['id'];live.finish(rid)

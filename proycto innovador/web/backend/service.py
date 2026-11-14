@@ -15,13 +15,30 @@ from experimento_mortalidad import predecir, simular_corrida, metricas
 
 HORIZONS=[1,6,12]
 SCENARIOS=['estable','amonio','hipoxia','termico','ph','combinado']
-LABELS={'estable':'Estable','amonio':'Amoníaco','hipoxia':'Oxígeno bajo','termico':'Temperatura','ph':'pH','combinado':'Combinado'}
+from .labels import LABELS
 MODELS={}
+MODEL_VERSIONS={}
 
-def models():
+def models(version='v3'):
+    if version!='v3':
+        if version!='v4':raise ValueError('Versión de modelo desconocida')
+        if version not in MODEL_VERSIONS:
+            MODEL_VERSIONS[version]={h:joblib.load(MODEL_DIR/version/f'modelo_{h}h.joblib') for h in HORIZONS}
+            manifest=MODEL_DIR/'activo.json'
+            if manifest.exists():
+                active=json.loads(manifest.read_text(encoding='utf-8'))
+                for h,source in active.get('horizontes',{}).items():
+                    if source=='v3':MODEL_VERSIONS[version][int(h)]=models()[int(h)]
+        return MODEL_VERSIONS[version]
     if not MODELS:
         for h in HORIZONS: MODELS[h]=joblib.load(MODEL_DIR/f'modelo_{h}h.joblib')
     return MODELS
+
+
+def current_version():
+    # La activación solo ocurre tras cerrar y revisar el experimento.
+    path=MODEL_DIR/'activo.json'
+    return json.loads(path.read_text(encoding='utf-8'))['version'] if path.exists() else 'v3'
 
 def clean(df):
     return json.loads(df.replace([np.inf,-np.inf],np.nan).to_json(orient='records',force_ascii=False))
@@ -122,23 +139,44 @@ def snapshot_data(r,d,hour,horizon):
     fields=['pez_id','pecera_id','especie_nombre','peso_gramos',risk,alert,'ph','temperatura','oxigeno','nh3_mg_n_l','condiciones']
     fields += [c for c in ['calidad_prediccion','prediccion_disponible'] if c in fish]
     public={k:v for k,v in r.items() if k!='agua_actual'}
-    return {'corrida':public,'hora':hour,'horizonte':horizon,'umbral':models()[horizon]['umbrales']['F2'],
+    version=r.get('vivo',{}).get('modelo_version','v3')
+    return {'corrida':public,'hora':hour,'horizonte':horizon,'umbral':models(version)[horizon]['umbrales']['F2'],
         'peces':len(x),'evaluados':int(x[risk].notna().sum()),'sin_prediccion':int(x[risk].isna().sum()),
         'alertas':int(x[alert].sum()),'esperadas':float(x[risk].sum()) if x[risk].notna().any() or x.empty else None,
         'peceras':tanks,'detalle':clean(fish[fields])}
 
 def timeline(rid,horizon,tid=None):
     r,d=get_run(rid)
-    return timeline_data(d,horizon,tid,r.get('vivo',{}).get('hora',84))
+    return timeline_data(d,horizon,tid,r.get('vivo',{}).get('hora',84),context=r)
 
-def timeline_data(d,horizon,tid=None,maximum=84):
+def timeline_data(d,horizon,tid=None,maximum=84,context=None):
     if tid is not None: d=d[d.pecera_id.eq(tid)]
-    out=[]
+    out=[];by_tank={str(i):[] for i in range(3)}
+    def point(g,hour):
+        return {'hora':hour,'vivos':len(g),'esperadas':float(g[f'riesgo_{horizon}h'].sum()) if g[f'riesgo_{horizon}h'].notna().any() or g.empty else None,
+            'alertas':int(g[f'alerta_{horizon}h'].sum()),'riesgo_medio':float(g[f'riesgo_{horizon}h'].mean()) if g[f'riesgo_{horizon}h'].notna().any() else None,
+            'sin_prediccion':int(g[f'riesgo_{horizon}h'].isna().sum())}
     for hour in range(maximum+1):
         g=d[d.hora_sim.eq(hour)]
-        out.append({'hora':hour,'vivos':len(g),'esperadas':float(g[f'riesgo_{horizon}h'].sum()) if g[f'riesgo_{horizon}h'].notna().any() or g.empty else None,
-            'alertas':int(g[f'alerta_{horizon}h'].sum()),'riesgo_medio':float(g[f'riesgo_{horizon}h'].mean()) if g[f'riesgo_{horizon}h'].notna().any() else None,
-            'sin_prediccion':int(g[f'riesgo_{horizon}h'].isna().sum())})
+        out.append(point(g,hour))
+        if tid is None:
+            for tank in by_tank:by_tank[tank].append(point(g[g.pecera_id.eq(int(tank))],hour))
+    from .timeline_notes import annotate
+    readings=d.drop_duplicates(['pecera_id','hora_sim']).to_dict('records')
+    log=[]
+    if context and context.get('vivo',{}).get('motor')=='incremental_v2':
+        from .live import details
+        log=details(context['id'],maximum)['bitacora']
+        readings=context.get('agua_actual',readings)
+    if tid is not None:
+        readings=[w for w in readings if w.get('id',w.get('pecera_id'))==tid]
+        log=[ev for ev in log if ev.get('pecera_id') in [None,tid]]
+    annotate(out,readings,log)
+    if tid is None:
+        for tank,points in by_tank.items():
+            annotate(points,[w for w in readings if w.get('id',w.get('pecera_id'))==int(tank)],
+                     [ev for ev in log if ev.get('pecera_id') in [None,int(tank)]])
+        for index,item in enumerate(out):item['peceras']={tank:points[index] for tank,points in by_tank.items()}
     return out
 
 def evaluate(d,h):
@@ -146,7 +184,9 @@ def evaluate(d,h):
     if x.empty:
         return {k:None for k in ['accuracy','precision','recall','f1','roc_auc','pr_auc_ap','brier','tn','fp','fn','tp']}|{
             'observaciones':0,'muertes_distintas':0,'anticipadas_distintas':0,'pendiente':True}
-    m=metricas(x[f'observado_{h}h'],x[f'riesgo_{h}h'],models()[h]['umbrales']['F2'])
+    # Compatibilidad con filas antiguas tras reanudar un checkpoint v3.
+    threshold=x[f'umbral_{h}h'].fillna(models()[h]['umbrales']['F2']).to_numpy() if f'umbral_{h}h' in x else models()[h]['umbrales']['F2']
+    m=metricas(x[f'observado_{h}h'],x[f'riesgo_{h}h'],threshold)
     m['observaciones']=len(x)
     deaths=x[x[f'observado_{h}h'].eq(1)][['corrida_id','pez_id']].drop_duplicates()
     hit=x[x[f'observado_{h}h'].eq(1)&x[f'alerta_{h}h']][['corrida_id','pez_id']].drop_duplicates()

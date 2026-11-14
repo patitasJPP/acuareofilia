@@ -1,4 +1,5 @@
-from .paths import DATA, SEED, MODELS, EXPORTS
+from .labels import LABELS
+from .paths import ROOT, DATA, SEED, MODELS, EXPORTS
 """Informe XLSX por corrida: datos completos, cortes y evaluación."""
 from io import BytesIO
 import pandas as pd
@@ -18,13 +19,13 @@ def excel(rid,hour,horizon):
     model_metrics=metrics()
     # Los resultados futuros se mantienen identificados; no se usan para inferencia.
     guide=pd.DataFrame([
-        ['Informe','Pisciber BSF · Mortalidad simulada'],['Corrida',r['nombre']],['Escenario',r['escenario']],
+        ['Informe','Pisciber BSF · Mortalidad simulada'],['Corrida',r['nombre']],['Escenario',LABELS.get(r['escenario'],r['escenario'])],
         ['Semilla',r['semilla']],['Corte (hora de simulación)',hour],['Horizonte (horas)',horizon],
-        ['Modelo','XGBoost calibrado · experimento local v3'],['Peces vivos en el corte',snap['peces']],
+        ['Modelo',f"XGBoost calibrado · {r.get('vivo',{}).get('modelo_version','v3')}"],['Peces vivos en el corte',snap['peces']],
         ['Muertes esperadas en el corte',snap['esperadas']],['Peces con alerta',snap['alertas']],
         ['Probabilidad individual','riesgo_12h=0.60 se muestra como 60 %. Es una estimación, no una muerte segura.'],
         ['Muertes esperadas','Suma de probabilidades de peces vivos de una pecera en una misma hora. No sumar horas.'],
-        ['Alertas','Umbral F2 elegido previamente en validación. No equivale a 50 % ni 60 %.'],
+        ['Alertas','Umbral elegido previamente en validación: F2 para v3; F1 con recall mínimo de 65 % en validación para v4. No equivale a 50 % ni 60 %.'],
         ['Pecera','El riesgo medio es un promedio individual; no es la probabilidad de que muera al menos un pez.'],
         ['Condiciones','Valores observados y desvíos del agua. No prueban la causa de muerte.'],
         ['Desenlaces','observado_*h y hora_evento son resultados futuros SOLO para evaluación. No son predictores.'],
@@ -44,7 +45,11 @@ def excel(rid,hour,horizon):
                'Bitacora v2':pd.DataFrame(info['bitacora'],columns=['hora','pecera_id','tipo','detalle']),
                'Intervenciones v2':pd.DataFrame(info['acciones'],columns=['id','pecera_id','accion','valor','duracion','solicitada_hora','efectiva_hora']),
                'Sensores v2':pd.DataFrame(r['agua_actual'])}
-        guide.loc[len(guide)]=['Motor','incremental_v2: métricas del modelo original v3 no validan automáticamente este motor.']
+        path=ROOT/'resultados/entrenamiento_v4/informe.json'
+        if path.exists():
+            report=json.loads(path.read_text(encoding='utf-8'))
+            extra['Comparacion modelos v4']=pd.DataFrame(report['comparacion'])
+        guide.loc[len(guide)]=['Motor','incremental_v2: consulta la evaluación de la versión de modelo de esta corrida.']
         guide.loc[len(guide)]=['Datos ausentes','riesgo vacío = sin predicción; no es 0 %. Los porcentajes excluyen estos casos. Consultar calidad_prediccion.']
         guide.loc[len(guide)]=['Historia estimada','Se permite arrastrar hasta dos lecturas pasadas para las variables históricas; no se inventa una lectura actual. Un hueco mayor bloquea la inferencia restante de ese pez.']
         guide.loc[len(guide)]=['Intervenciones','Se aplican desde efectiva_hora. Una supervivencia tras intervenir no demuestra que la alerta fuera injustificada.']

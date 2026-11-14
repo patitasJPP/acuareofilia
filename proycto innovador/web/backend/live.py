@@ -13,7 +13,7 @@ from .storage import Base, engine as database_engine, ROOT, Session, Run, as_dic
 from . import service
 from .live_engine import LiveEngine
 from simulacion.motor.realistic_engine import RealisticEngine, configuration
-from simulacion.motor.features import prepare
+from simulacion.motor.features import prepare, IncrementalFeatures
 
 class LiveRun(Base):
     __tablename__='pisciber_vivo'
@@ -51,6 +51,8 @@ def meta(p):
     return {'estado':p['estado'],'hora':p['engine'].hour,'segundos':p['segundos'],'fin':96,
         'motor':getattr(p['engine'],'version','incremental_v1'),'version':p['engine'].hour,'duracion_paso':p.get('duracion_paso',0),
         'configuracion':getattr(p['engine'],'config',None),'rama_de':p.get('rama_de'),
+        'modelo_version':p.get('modelo_version','v3'),
+        'modelos_horizontes':{str(h):b.get('version','v3') for h,b in service.models(p.get('modelo_version','v3')).items()},
         'error':p.get('error',''),'nota':p.get('nota','')}
 
 def statuses():
@@ -63,15 +65,18 @@ def read(rid):
         return p['scored'].copy(),meta(p),list(getattr(p['engine'],'water_history',p['engine'].water))
 
 
-def score_v2(raw):
+def score_v2(raw,version='v3'):
     """Una fila sin lectura no se convierte en un riesgo igual a cero."""
     result, features, _ = prepare(pd.DataFrame(raw))
     available = result.prediccion_disponible
-    for h, b in service.models().items():
+    result['modelo_version']=version
+    for h, b in service.models(version).items():
         result[f'riesgo_{h}h'] = np.nan
         if available.any():
             result.loc[available,f'riesgo_{h}h'] = service.predecir(b['pipeline'],b['calibrador'],features.loc[available,b['features']])
         result[f'alerta_{h}h'] = result[f'riesgo_{h}h'].ge(b['umbrales']['F2'])
+        result[f'umbral_{h}h']=b['umbrales']['F2']
+        result[f'modelo_{h}h']=b.get('version','v3')
     return result
 
 
@@ -90,20 +95,28 @@ def advance(e):
     hour=p['engine'].hour
     if rows:
         if isinstance(p['engine'],RealisticEngine):
-            originals, features, _ = prepare(pd.DataFrame(p['raw']))
-            now = originals[originals.hora_sim.eq(hour)].copy()
-            inputs = features.loc[now.index]
+            if 'feature_state' not in p:
+                p['feature_state']=IncrementalFeatures()
+                # Compatibilidad con checkpoints anteriores, reconstruida una vez.
+                for _,past in pd.DataFrame(p['raw']).groupby('hora_sim',sort=True):
+                    now,inputs=p['feature_state'].update(past.to_dict('records'))
+            else:
+                now,inputs=p['feature_state'].update(rows)
             available = now.prediccion_disponible
         else:
             allrows,_=service.historia(pd.DataFrame(p['raw']))
             now=allrows[allrows.hora_sim.eq(hour)].copy()
             inputs = now
             available = pd.Series(True,index=now.index)
-        for h,b in service.models().items():
+        version=p.get('modelo_version','v3')
+        now['modelo_version']=version
+        for h,b in service.models(version).items():
             now[f'riesgo_{h}h']=np.nan
             if available.any():
                 now.loc[available,f'riesgo_{h}h']=service.predecir(b['pipeline'],b['calibrador'],inputs.loc[available,b['features']])
             now[f'alerta_{h}h']=now[f'riesgo_{h}h'].ge(b['umbrales']['F2'])
+            now[f'umbral_{h}h']=b['umbrales']['F2']
+            now[f'modelo_{h}h']=b.get('version','v3')
         p['scored']=pd.concat([p['scored'],now],ignore_index=True)
     labels(p)
     if hour==96:p['estado']='terminada'
@@ -126,13 +139,14 @@ def worker_loop(e,delay=None):
                 logging.exception('Error de simulación incremental')
                 e.payload=pickle.loads(before)
                 e.payload['estado']='error';e.payload['error']=str(exc);save(e);return
-            delay=max(0.,e.payload['segundos']-(time.monotonic()-start))
+            # Cede tiempo al navegador y a Pausar incluso en velocidad máxima.
+            delay=max(.01,e.payload['segundos']-(time.monotonic()-start))
 
 def start(e):
     if e.thread and e.thread.is_alive():return
     e.wake.clear();e.thread=threading.Thread(target=worker_loop,args=(e,),daemon=True);e.thread.start()
 
-def create(scenario,seed,seconds,config=None,version='incremental_v2',require_idle=True):
+def create(scenario,seed,seconds,config=None,version='incremental_v2',require_idle=True,model_version=None):
     with _guard:
         fichas = pd.read_csv(SEED/'fichas_origen.csv')
         if version == 'incremental_v2': config = configuration(config,fichas)
@@ -144,6 +158,7 @@ def create(scenario,seed,seconds,config=None,version='incremental_v2',require_id
             r.archivo=f'vivo_{rid}.csv';s.add(LiveRun(run_id=rid));s.commit();run=as_dict(r)
         motor = RealisticEngine(fichas,100000+rid,seed,scenario,config) if version == 'incremental_v2' else LiveEngine(fichas,100000+rid,seed,scenario)
         e=Entry({'rid':rid,'engine':motor,
+            'modelo_version':model_version or (service.current_version() if version=='incremental_v2' else 'v3'),
             'estado':'pausada','segundos':seconds,'raw':[],'scored':pd.DataFrame(),'nota':''})
         advance(e) # Solo hora cero; no ocurre ninguna muerte antes de predecir.
         _entries[rid]=e
@@ -158,7 +173,7 @@ def finish(rid):
         try:
             while p['engine'].hour < 96:
                 p['raw'].extend(p['engine'].step())
-            p['scored'] = score_v2(p['raw']); labels(p)
+            p['scored'] = score_v2(p['raw'],p.get('modelo_version','v3')); labels(p)
             p['estado'] = 'terminada'; save(e)
             with Session() as s:
                 r = s.get(Run,rid);r.estado='lista';s.commit()
@@ -212,6 +227,7 @@ def branch(rid,hour):
         scored=p['scored'][p['scored'].hora_sim.le(hour)].copy()
         scored['corrida_id']=100000+newid
         child=Entry({'rid':newid,'engine':engine,'raw':raw,'scored':scored,'estado':'pausada','segundos':p['segundos'],
+                     'modelo_version':p.get('modelo_version','v3'),
                      'rama_de':{'id':rid,'hora':hour},'nota':'Rama creada desde el historial; puedes probar otra decisión.'})
         labels(child.payload);save(child);_entries[newid]=child
         return row|{'vivo':meta(child.payload)}
@@ -277,14 +293,16 @@ def restart(rid):
             if not run:raise ValueError('La corrida no existe')
             scenario,seed,origin=run.escenario,run.semilla,run.origen
         config,version,seconds=None,'incremental_v2',1.
+        model_version=None
         if origin=='vivo':
             e=entry_for(rid)
             with e.lock:
                 config=getattr(e.payload['engine'],'config',None)
                 version=getattr(e.payload['engine'],'version','incremental_v1')
                 seconds=e.payload['segundos']
+                model_version=e.payload.get('modelo_version','v3')
             control(rid,'pausar')
-        row=create(scenario,seed,seconds,config,version,require_idle=False)
+        row=create(scenario,seed,seconds,config,version,require_idle=False,model_version=model_version)
         with Session() as s:
             run=s.get(Run,row['id']);run.nombre=f'Reinicio de {rid} · {service.LABELS[scenario]} · {seed}';s.commit()
             row['nombre']=run.nombre

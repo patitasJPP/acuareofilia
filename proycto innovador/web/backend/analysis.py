@@ -143,10 +143,13 @@ def scenarios(horizon):
             info=details(run.id,96)
             # Las ramas de una misma semilla no son réplicas independientes.
             variant=json.dumps({'config':info['configuracion'],'acciones':info['acciones']},sort_keys=True,ensure_ascii=False)
+        model_version=r.get('vivo',{}).get('modelo_version','v3')
+        variant=json.dumps({'configuracion':variant,'modelo':model_version},sort_keys=True)
         seedkey=(motor,run.escenario,run.semilla,variant)
         if seedkey in seen:duplicates+=1;continue
         seen.add(seedkey);k=(motor,run.escenario,variant)
         g=groups.setdefault(k,{'motor':motor,'escenario':run.escenario,'configuracion':r.get('vivo',{}).get('configuracion'),
+            'modelo_version':model_version,
             'variante':variant,'corridas':0,'iniciales':0,'muertos':0,'tp':0,'fp':0,'fn':0,'tn':0})
         m=service.evaluate(d,horizon);st=statistics_data(r,d,96)
         g['corridas']+=1;g['iniciales']+=st['iniciales'];g['muertos']+=st['muertos']

@@ -1,0 +1,10 @@
+{
+  "version": "v4",
+  "horizontes": {
+    "1": "v3",
+    "6": "v4",
+    "12": "v4"
+  },
+  "experimento": "resultados/entrenamiento_v4",
+  "nota": "Tras evaluar se rechaza desplegar el candidato v4 de 1 h: perdió precisión y F1. Se conserva como evidencia y se usa v3 a 1 h. Se aceptan v4 a 6 y 12 h por mejora de F1 y reducción de falsas alarmas, informando la reducción de recall. No se reajustó ningún umbral ni modelo tras ver test."
+}

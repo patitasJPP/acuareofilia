@@ -1,0 +1,8 @@
+{
+  "configuracion": {
+    "max_depth": 3,
+    "n_estimators": 180
+  },
+  "umbral": 0.032236514731732197,
+  "regla": "F1 en validación sujeto a recall >= 65 %"
+}

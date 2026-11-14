@@ -1,3 +1,4 @@
+from .labels import simulation_name
 """Registro persistente. SQLite local; PostgreSQL mediante DATABASE_URL."""
 import os
 from pathlib import Path
@@ -31,4 +32,4 @@ class Run(Base):
 Base.metadata.create_all(engine)
 
 def as_dict(r):
-    return {c:getattr(r,c) for c in ['id','nombre','escenario','semilla','origen','estado','error']} | {'creado':r.creado.isoformat()}
+    return {c:getattr(r,c) for c in ['id','nombre','escenario','semilla','origen','estado','error']} | {'creado':r.creado.isoformat(),'nombre':simulation_name(r.nombre,r.escenario)}
