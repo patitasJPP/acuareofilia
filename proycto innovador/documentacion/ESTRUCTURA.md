@@ -5,6 +5,10 @@ La carpeta principal conserva `INICIAR.bat`, `iniciar.ps1`, las dependencias y e
 | Carpeta | Contenido |
 |---|---|
 | `web/frontend` | React, estilos, componentes, configuración Vite y compilación `dist`. |
+| `web/frontend/src/features/mortalidad` | Estadísticas, seguimiento y comparación de mortalidad (`Insights.jsx`). |
+| `web/frontend/src/features/simulacion` | Configuración y evaluación del simulador (`SimulationPanels.jsx`). |
+| `web/frontend/src/features/demanda` | Panel comercial, reloj semanal y estilos de ventas. |
+| `web/frontend/src/styles` | Estilos generales y del reloj de las peceras. |
 | `web/backend` | API FastAPI, conexión, estadísticas, atención de alertas, exportación y reloj del servidor. |
 | `simulacion/motor` | Motor incremental que genera las condiciones y muertes simuladas. Funciona sin interfaz web. |
 | `simulacion/ml` | Funciones de historia ambiental, preprocesamiento y experimentos de entrenamiento. |
@@ -18,7 +22,7 @@ La carpeta principal conserva `INICIAR.bat`, `iniciar.ps1`, las dependencias y e
 | `resultados/simulaciones` | Resultados CSV del motor ejecutado de forma independiente. |
 | `logs` | Registros del servidor. |
 | `documentacion` | Guía de presentación, funcionalidades y estructura. |
-| `herramientas` | Utilidades de mantenimiento y migraciones ya realizadas. |
+| `herramientas` | Utilidad de configuración de PostgreSQL; las migraciones puntuales antiguas se retiraron en la limpieza aprobada. |
 
 El backend coordina los módulos; el motor no importa componentes de React ni endpoints. `web/backend/live_engine.py` es una referencia de compatibilidad para abrir checkpoints previos a la reorganización. Los modelos y las corridas se conservaron.
 
