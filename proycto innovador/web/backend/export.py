@@ -35,6 +35,19 @@ def excel(rid,hour,horizon):
         ['Cálculo en vivo',f"Hora calculada: {r.get('vivo',{}).get('hora','corrida completa')}. Las observaciones futuras no se generan por adelantado."],
         ['Resultados pendientes','observado_*h queda vacío hasta completar el plazo desde la observación. Las probabilidades emitidas se conservan.'],
     ],columns=['Concepto','Explicación / valor'])
+    extra={}
+    if r.get('vivo',{}).get('motor')=='incremental_v2':
+        from .live import details
+        import json
+        info=details(rid,r['vivo']['hora'])
+        extra={'Configuracion v2':pd.DataFrame([{'clave':k,'valor':json.dumps(v,ensure_ascii=False)} for k,v in info['configuracion'].items()]),
+               'Bitacora v2':pd.DataFrame(info['bitacora'],columns=['hora','pecera_id','tipo','detalle']),
+               'Intervenciones v2':pd.DataFrame(info['acciones'],columns=['id','pecera_id','accion','valor','duracion','solicitada_hora','efectiva_hora']),
+               'Sensores v2':pd.DataFrame(r['agua_actual'])}
+        guide.loc[len(guide)]=['Motor','incremental_v2: métricas del modelo original v3 no validan automáticamente este motor.']
+        guide.loc[len(guide)]=['Datos ausentes','riesgo vacío = sin predicción; no es 0 %. Los porcentajes excluyen estos casos. Consultar calidad_prediccion.']
+        guide.loc[len(guide)]=['Historia estimada','Se permite arrastrar hasta dos lecturas pasadas para las variables históricas; no se inventa una lectura actual. Un hueco mayor bloquea la inferencia restante de ese pez.']
+        guide.loc[len(guide)]=['Intervenciones','Se aplican desde efectiva_hora. Una supervivencia tras intervenir no demuestra que la alerta fuera injustificada.']
     with pd.ExcelWriter(out,engine='openpyxl') as writer:
         body_font=Font(name='Calibri',size=11)
         body_alignment=Alignment(vertical='center')
@@ -48,8 +61,9 @@ def excel(rid,hour,horizon):
             'Intervalos modelo':pd.DataFrame(model_metrics['intervalos']),
             'Mortalidad al corte':pd.DataFrame(stats['grupos']),
             'Evolucion poblacion':pd.DataFrame(stats['evolucion']),
-            'Seguimiento al corte':track[['pez_id','pecera_id','especie_nombre','hora_sim','hora_limite','probabilidad','alerta','resultado','atendida','hora_atencion','nota_atencion']],
+            'Seguimiento al corte':track[['pez_id','pecera_id','especie_nombre','hora_sim','hora_limite','probabilidad','alerta','resultado','atendida','hora_atencion','nota_atencion','intervencion_en_plazo']],
             'Sugerencias de revision':pd.DataFrame(analysis.recommendations(rid,hour,horizon),columns=['pecera_id','condicion','peces_afectados','especies','sugerencia','origen'])}
+        sheets.update(extra)
         for name,df in sheets.items():
             df.to_excel(writer,sheet_name=name,index=False)
             ws=writer.sheets[name];ws.freeze_panes='D2' if len(df)>100 else 'A2';ws.sheet_view.showGridLines=False

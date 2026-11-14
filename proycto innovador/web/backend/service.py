@@ -79,6 +79,10 @@ def get_run(rid):
 
 def conditions(row):
     notes=[]
+    if row.get('calidad_prediccion') in ['sin_lectura','historial_incompleto']:
+        notes.append('Sin predicción: lectura ausente o historial incompleto')
+    elif row.get('calidad_prediccion')=='historia_estimada':
+        notes.append('Historia con lecturas estimadas a partir del pasado')
     if row['temp_desvio']>0.1: notes.append('Temperatura fuera del rango de la especie')
     if row['ox_deficit']>0.1: notes.append('Oxígeno por debajo del mínimo de la especie')
     if row['ph_desvio']>0.05: notes.append('pH fuera del rango de la especie')
@@ -102,21 +106,26 @@ def snapshot_data(r,d,hour,horizon):
         past=d[d.pecera_id.eq(tid)&d.hora_sim.le(hour)]
         readings=past.sort_values('hora_sim').tail(1)
         ref=readings.iloc[0] if len(readings) else None
-        tanks.append({'id':tid,'nombre':f'Pecera {tid+1:02d}','peces':len(g),
-            'esperadas':float(g[risk].sum()),'riesgo_medio':float(g[risk].mean()) if len(g) else 0,
-            'riesgo_maximo':float(g[risk].max()) if len(g) else 0,'alertas':int(g[alert].sum()),
+        available=int(g[risk].notna().sum())
+        tanks.append({'id':tid,'nombre':f'Pecera {tid+1:02d}','peces':len(g),'evaluados':available,'sin_prediccion':len(g)-available,
+            'esperadas':float(g[risk].sum()) if available or not len(g) else None,'riesgo_medio':float(g[risk].mean()) if available else None,
+            'riesgo_maximo':float(g[risk].max()) if available else None,'alertas':int(g[alert].sum()),
             'sobre_60':int(g[risk].ge(.6).sum()),
             'ph':float(ref.ph) if ref is not None else None,'temperatura':float(ref.temperatura) if ref is not None else None,
             'oxigeno':float(ref.oxigeno) if ref is not None else None,'nh3':float(ref.nh3_mg_n_l) if ref is not None else None,
             'hora_lectura':int(ref.hora_sim) if ref is not None else None})
-        if r.get('vivo') and hour==r['vivo']['hora']:
-            water=next((w for w in r['agua_actual'] if w['id']==tid),{})
-            tanks[-1].update({k:v for k,v in water.items() if k in ['ph','temperatura','oxigeno','nh3','hora_lectura']})
+        if r.get('vivo'):
+            water=next((w for w in reversed(r['agua_actual']) if w['id']==tid and w['hora_lectura']==hour),{})
+            tanks[-1].update({k:(None if isinstance(v,float) and not np.isfinite(v) else v) for k,v in water.items() if k in ['ph','temperatura','oxigeno','nh3','hora_lectura','sensor_disponible']})
     fish=x.sort_values(risk,ascending=False).copy()
     fish['condiciones']=fish.apply(lambda row:'; '.join(conditions(row)),axis=1)
     fields=['pez_id','pecera_id','especie_nombre','peso_gramos',risk,alert,'ph','temperatura','oxigeno','nh3_mg_n_l','condiciones']
-    return {'corrida':r,'hora':hour,'horizonte':horizon,'umbral':models()[horizon]['umbrales']['F2'],
-        'peces':len(x),'alertas':int(x[alert].sum()),'esperadas':float(x[risk].sum()),'peceras':tanks,'detalle':clean(fish[fields])}
+    fields += [c for c in ['calidad_prediccion','prediccion_disponible'] if c in fish]
+    public={k:v for k,v in r.items() if k!='agua_actual'}
+    return {'corrida':public,'hora':hour,'horizonte':horizon,'umbral':models()[horizon]['umbrales']['F2'],
+        'peces':len(x),'evaluados':int(x[risk].notna().sum()),'sin_prediccion':int(x[risk].isna().sum()),
+        'alertas':int(x[alert].sum()),'esperadas':float(x[risk].sum()) if x[risk].notna().any() or x.empty else None,
+        'peceras':tanks,'detalle':clean(fish[fields])}
 
 def timeline(rid,horizon,tid=None):
     r,d=get_run(rid)
@@ -127,12 +136,13 @@ def timeline_data(d,horizon,tid=None,maximum=84):
     out=[]
     for hour in range(maximum+1):
         g=d[d.hora_sim.eq(hour)]
-        out.append({'hora':hour,'vivos':len(g),'esperadas':float(g[f'riesgo_{horizon}h'].sum()),
-            'alertas':int(g[f'alerta_{horizon}h'].sum()),'riesgo_medio':float(g[f'riesgo_{horizon}h'].mean()) if len(g) else 0})
+        out.append({'hora':hour,'vivos':len(g),'esperadas':float(g[f'riesgo_{horizon}h'].sum()) if g[f'riesgo_{horizon}h'].notna().any() or g.empty else None,
+            'alertas':int(g[f'alerta_{horizon}h'].sum()),'riesgo_medio':float(g[f'riesgo_{horizon}h'].mean()) if g[f'riesgo_{horizon}h'].notna().any() else None,
+            'sin_prediccion':int(g[f'riesgo_{horizon}h'].isna().sum())})
     return out
 
 def evaluate(d,h):
-    x=d[d[f'observado_{h}h'].notna()]
+    x=d[d[f'observado_{h}h'].notna() & d[f'riesgo_{h}h'].notna()]
     if x.empty:
         return {k:None for k in ['accuracy','precision','recall','f1','roc_auc','pr_auc_ap','brier','tn','fp','fn','tp']}|{
             'observaciones':0,'muertes_distintas':0,'anticipadas_distintas':0,'pendiente':True}

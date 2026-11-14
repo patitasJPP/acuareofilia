@@ -1,5 +1,6 @@
 """Estadísticas al corte, seguimiento verificable y reglas de revisión."""
 from datetime import datetime, timezone
+import json
 import numpy as np
 import pandas as pd
 from sqlalchemy import ForeignKey, Integer, Text, DateTime, UniqueConstraint
@@ -35,8 +36,16 @@ def tracking_data(r,d,hour,horizon):
     matured=x.hora_sim+horizon<=hour
     died=x.hora_evento.gt(x.hora_sim)&x.hora_evento.le(x.hora_sim+horizon)
     alert=x[f'alerta_{horizon}h'].astype(bool)
-    x['resultado']=np.select([~matured,alert&died,alert&~died,~alert&died],
-        ['pendiente','aviso_correcto','falsa_alarma','muerte_sin_aviso'],default='supervivencia_correcta')
+    unavailable=x[f'riesgo_{horizon}h'].isna()
+    x['resultado']=np.select([unavailable,~matured,alert&died,alert&~died,~alert&died],
+        ['sin_prediccion','pendiente','aviso_correcto','falsa_alarma','muerte_sin_aviso'],default='supervivencia_correcta')
+    x['intervencion_en_plazo']=False
+    if r.get('vivo',{}).get('motor')=='incremental_v2':
+        from .live import details
+        for action in details(r['id'],hour)['acciones']:
+            effective=action['efectiva_hora']
+            affected=(x.pecera_id.eq(action['pecera_id']) & x.hora_sim.lt(effective) & (x.hora_sim+horizon).ge(effective))
+            if effective<=hour:x.loc[affected,'intervencion_en_plazo']=True
     x['hora_limite']=x.hora_sim+horizon
     x['horizonte']=horizon;x['probabilidad']=x[f'riesgo_{horizon}h'];x['alerta']=alert
     with Session() as s:attentions=s.query(Attention).filter_by(run_id=r['id'],horizonte=horizon).all()
@@ -48,7 +57,7 @@ def tracking_data(r,d,hour,horizon):
 
 def tracking(rid,hour,horizon,only_alerts=True,result='todos',page=0,limit=25):
     r,d=service.get_run(rid);x=tracking_data(r,d,hour,horizon)
-    counts={k:int(x.resultado.eq(k).sum()) for k in ['pendiente','aviso_correcto','falsa_alarma','muerte_sin_aviso','supervivencia_correcta']}
+    counts={k:int(x.resultado.eq(k).sum()) for k in ['sin_prediccion','pendiente','aviso_correcto','falsa_alarma','muerte_sin_aviso','supervivencia_correcta']}
     tp=counts['aviso_correcto'];fp=counts['falsa_alarma'];fn=counts['muerte_sin_aviso'];tn=counts['supervivencia_correcta']
     summary=counts|{'precision':safe_ratio(tp,tp+fp),'recall':safe_ratio(tp,tp+fn),'error':safe_ratio(fp+fn,tp+fp+fn+tn),
         'evaluadas':tp+fp+fn+tn,'alertas':int(x.alerta.sum()),'atendidas':int(x.atendida.sum()),
@@ -56,7 +65,7 @@ def tracking(rid,hour,horizon,only_alerts=True,result='todos',page=0,limit=25):
     if only_alerts:x=x[x.alerta]
     if result!='todos':x=x[x.resultado.eq(result)]
     x=x.sort_values(['hora_sim','probabilidad','pez_id'],ascending=[False,False,True])
-    cols=['pez_id','pecera_id','especie_nombre','hora_sim','hora_limite','horizonte','probabilidad','alerta','resultado','hora_evento','atendida','hora_atencion','nota_atencion']
+    cols=['pez_id','pecera_id','especie_nombre','hora_sim','hora_limite','horizonte','probabilidad','alerta','resultado','hora_evento','atendida','hora_atencion','nota_atencion','intervencion_en_plazo']
     return {'resumen':summary,'total':len(x),'pagina':page,'filas':service.clean(x.iloc[page*limit:(page+1)*limit][cols])}
 
 def statistics_data(r,d,hour):
@@ -74,9 +83,12 @@ def statistics_data(r,d,hour):
         m=int(dead.hora_evento.le(t).sum())
         curve.append({'hora':t,'vivos':initial-m,'muertos':m,'mortalidad':safe_ratio(m,initial)})
     water=d[d.hora_sim.le(hour)].groupby(['pecera_id','hora_sim'],as_index=False)[['ph','temperatura','oxigeno','nh3_mg_n_l']].first()
+    if r.get('vivo',{}).get('motor')=='incremental_v2' and r.get('agua_actual'):
+        water=pd.DataFrame(r['agua_actual']).rename(columns={'id':'pecera_id','hora_lectura':'hora_sim','nh3':'nh3_mg_n_l'})
+        water=water[water.hora_sim.le(hour)]
     return {'hora':hour,'iniciales':initial,'muertos':deaths,'vivos':initial-deaths,'mortalidad':safe_ratio(deaths,initial),
         'grupos':groups,'evolucion':curve,'agua':service.clean(water),
-        'motor':'incremental_v1' if r['origen']=='vivo' else 'lotes_v3'}
+        'motor':r.get('vivo',{}).get('motor','incremental_v1') if r['origen']=='vivo' else 'lotes_v3'}
 
 def statistics(rid,hour):
     r,d=service.get_run(rid);return statistics_data(r,d,hour)
@@ -88,6 +100,10 @@ def recommendations(rid,hour,horizon):
         ('ph_desvio','PH','pH fuera del rango de la especie','Confirmar la lectura y revisar el rango de pH registrado para la especie.'),
         ('ox_deficit','OX','Oxígeno por debajo del mínimo de la especie','Revisar la lectura de oxígeno y el estado del sistema de aireación.')]
     for tid,g in x.groupby('pecera_id'):
+        if f'riesgo_{horizon}h' in g and g[f'riesgo_{horizon}h'].isna().any():
+            out.append({'pecera_id':int(tid),'codigo':'SENSOR','condicion':'Predicción no disponible',
+                'peces_afectados':int(g[f'riesgo_{horizon}h'].isna().sum()),'especies':', '.join(sorted(g.especie_nombre.unique())),
+                'sugerencia':'Revisar lecturas y bitácora. Una lectura ausente no significa agua segura.','origen':'Calidad de datos'})
         for col,code,title,action in rules:
             affected=g[g[col]>.05]
             if len(affected):out.append({'pecera_id':int(tid),'codigo':code,'condicion':title,'peces_afectados':len(affected),
@@ -120,11 +136,18 @@ def scenarios(horizon):
     for run in runs:
         r,d=service.get_run(run.id)
         if r.get('vivo',{}).get('hora',96)<96:partial+=1;continue
-        motor='incremental_v1' if run.origen=='vivo' else 'lotes_v3'
-        seedkey=(motor,run.escenario,run.semilla)
+        motor=r.get('vivo',{}).get('motor','incremental_v1') if run.origen=='vivo' else 'lotes_v3'
+        variant=''
+        if motor=='incremental_v2':
+            from .live import details
+            info=details(run.id,96)
+            # Las ramas de una misma semilla no son réplicas independientes.
+            variant=json.dumps({'config':info['configuracion'],'acciones':info['acciones']},sort_keys=True,ensure_ascii=False)
+        seedkey=(motor,run.escenario,run.semilla,variant)
         if seedkey in seen:duplicates+=1;continue
-        seen.add(seedkey);k=(motor,run.escenario)
-        g=groups.setdefault(k,{'motor':motor,'escenario':run.escenario,'corridas':0,'iniciales':0,'muertos':0,'tp':0,'fp':0,'fn':0,'tn':0})
+        seen.add(seedkey);k=(motor,run.escenario,variant)
+        g=groups.setdefault(k,{'motor':motor,'escenario':run.escenario,'configuracion':r.get('vivo',{}).get('configuracion'),
+            'variante':variant,'corridas':0,'iniciales':0,'muertos':0,'tp':0,'fp':0,'fn':0,'tn':0})
         m=service.evaluate(d,horizon);st=statistics_data(r,d,96)
         g['corridas']+=1;g['iniciales']+=st['iniciales'];g['muertos']+=st['muertos']
         for c in ['tp','fp','fn','tn']:g[c]+=m[c] or 0
@@ -132,4 +155,4 @@ def scenarios(horizon):
         g['mortalidad']=safe_ratio(g['muertos'],g['iniciales']);g['precision']=safe_ratio(g['tp'],g['tp']+g['fp'])
         g['recall']=safe_ratio(g['tp'],g['tp']+g['fn']);g['error']=safe_ratio(g['fp']+g['fn'],sum(g[c] for c in ['tp','fp','fn','tn']))
     return {'grupos':list(groups.values()),'excluidas_en_curso':partial,'repetidas_excluidas':duplicates,
-        'nota':'Solo corridas completas de 96 h; una semilla por ambiente y motor. Tasas calculadas desde sus conteos, sin promediar porcentajes.'}
+        'nota':'Solo corridas completas de 96 h; se separan motor, configuración y acciones. Una semilla por grupo. Las ramas de una semilla son comparaciones pareadas, no réplicas independientes.'}

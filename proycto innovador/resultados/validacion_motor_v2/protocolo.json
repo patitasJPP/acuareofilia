@@ -1,0 +1,22 @@
+{
+  "motor": "incremental_v2",
+  "modelo": "XGBoost local v3 sin modificar",
+  "semilla_base": 183114000,
+  "corridas": 36,
+  "regla_semilla": "base + escenario*1000 + replica*101",
+  "replicas_por_ambiente": 6,
+  "intensidades": [
+    "leve",
+    "moderado",
+    "severo"
+  ],
+  "sensores": "replicas 0-3 normal; 4-5 intermitente",
+  "seleccion": "Evaluación de transferencia del modelo congelado; no selecciona hiperparámetros ni umbrales.",
+  "motor_sha256": "e02fcee7c2532076930c8ec65231e769e45103ac7c094037f8ea98e42653ffb7",
+  "features_sha256": "841ec6fa14a3881bc4e207019aa207e8234e577fdea92425ed79d8d5ea8d07da",
+  "modelos_sha256": {
+    "1": "a97e13487e767f58ffe960f3dcb147cb9c6daedf87153d85d580023526f1415d",
+    "6": "c39513f70c1dafdc3639d375ebd27929745f86bd50bc836fb921520b90396af1",
+    "12": "29cfedbc995bafc57d5c05567fdbc38bc84e4781282a6f7fecb311b6fddcf843"
+  }
+}
