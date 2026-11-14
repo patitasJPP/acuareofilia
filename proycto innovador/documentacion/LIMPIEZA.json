@@ -1,0 +1,144 @@
+{
+  "archivos_retirados": [
+    {
+      "ruta": "archivo_historico\\experimento_v3\\corridas.csv",
+      "bytes": 16320,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\corridas.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\datos.csv",
+      "bytes": 100408668,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\datos.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\deteccion_muertes_distintas.csv",
+      "bytes": 342,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\deteccion_muertes_distintas.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\evaluacion_final.csv",
+      "bytes": 1764,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\evaluacion_final.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\eventos.csv",
+      "bytes": 96884,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\eventos.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\fichas_origen.csv",
+      "bytes": 337,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\fichas_origen.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\intervalos_por_corrida.csv",
+      "bytes": 633,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\intervalos_por_corrida.csv"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\versiones.json",
+      "bytes": 142,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\datos_base\\versiones.json"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\modelo_12h.joblib",
+      "bytes": 227333,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\modelos\\modelo_12h.joblib"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\modelo_1h.joblib",
+      "bytes": 409653,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\modelos\\modelo_1h.joblib"
+    },
+    {
+      "ruta": "archivo_historico\\experimento_v3\\modelo_6h.joblib",
+      "bytes": 227877,
+      "motivo": "Copia idéntica SHA-256; se conserva el archivo vigente",
+      "conservado_en": "proycto innovador\\simulacion\\modelos\\modelo_6h.joblib"
+    },
+    {
+      "ruta": "archivo_historico\\Pisciber_Colab.zip",
+      "bytes": 3333527,
+      "motivo": "Paquete regenerable; snapshot previo conservado en Git",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "archivo_historico\\Pisciber_Entrenamiento_v3.zip",
+      "bytes": 6596838,
+      "motivo": "Paquete regenerable; snapshot previo conservado en Git",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "archivo_historico\\Recuperar_Estadisticas_Colab.zip",
+      "bytes": 6799506,
+      "motivo": "Paquete regenerable; snapshot previo conservado en Git",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "archivo_historico\\Resultados_Pisciber_v3.zip",
+      "bytes": 242175,
+      "motivo": "Paquete regenerable; snapshot previo conservado en Git",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "archivo_historico\\outputs",
+      "bytes": 897956,
+      "motivo": "Extracción temporal redundante",
+      "conservado_en": "archivo_historico/colab_resultados/Resultados_Colab_v3.zip"
+    },
+    {
+      "ruta": "archivo_historico\\dist",
+      "bytes": 0,
+      "motivo": "Carpeta vacía de compilación antigua",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "__pycache__",
+      "bytes": 289566,
+      "motivo": "Caché Python regenerable",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "proycto innovador\\simulacion\\__pycache__",
+      "bytes": 3619,
+      "motivo": "Caché Python regenerable",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "proycto innovador\\simulacion\\ml\\__pycache__",
+      "bytes": 86220,
+      "motivo": "Caché Python regenerable",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "proycto innovador\\simulacion\\motor\\__pycache__",
+      "bytes": 14223,
+      "motivo": "Caché Python regenerable",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "proycto innovador\\web\\backend\\__pycache__",
+      "bytes": 113639,
+      "motivo": "Caché Python regenerable",
+      "conservado_en": ""
+    },
+    {
+      "ruta": "node_modules",
+      "bytes": 0,
+      "motivo": "Enlace local de herramientas eliminado sin tocar su destino compartido",
+      "conservado_en": "Runtime de herramientas externo al proyecto"
+    }
+  ],
+  "commit_previo": "3010c3ff30eb9daf5fce0dc8b342df174a9660e4",
+  "bytes_retirados": 119767222.0
+}

@@ -1,4 +1,0 @@
-horizonte_h,muertes_distintas_test,muertes_con_al_menos_un_aviso,recall_por_muerte_distinta,observaciones_test,tp_observaciones,falsas_alarmas_observaciones,anticipacion_mediana_h_en_detectados
-1,274,100,0.36496350364963503,40555,100,1112,1.0
-6,274,232,0.8467153284671532,39041,1309,7256,6.0
-12,274,251,0.916058394160584,37203,2678,8694,12.0

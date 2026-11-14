@@ -1,8 +1,0 @@
-especie_nombre,peso_gramos,ph_min,ph_max,temp_min,temp_max,oxigeno_min
-Tilapia,200.0,6.5,8.5,24.0,32.0,3.0
-Carpa,300.0,6.5,8.5,18.0,28.0,3.5
-Trucha arcoíris,120.0,6.5,8.0,10.0,18.0,6.0
-Guppy,0.5,6.8,7.8,22.0,28.0,4.0
-Tetra neón,0.4,5.5,7.0,22.0,27.0,4.0
-Gamitana,250.0,6.0,8.0,25.0,32.0,3.0
-Goldfish,60.0,6.5,8.0,18.0,24.0,4.0

@@ -1,5 +1,5 @@
 $ErrorActionPreference='Stop'
-$raiz=[IO.Path]::GetFullPath($PSScriptRoot)
+$raiz=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $archivo=Join-Path $raiz 'archivo_historico'
 New-Item -ItemType Directory -Force -Path $archivo | Out-Null
 $carpetas=@('backups','db','migrations','experimento_v2','experimento_v3','exportaciones','resultados_ml','outputs','build','dist')
