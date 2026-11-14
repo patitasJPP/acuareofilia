@@ -1,0 +1,69 @@
+{
+  "modelo": "XGBoost",
+  "umbral": 0.04281445871311027,
+  "test": {
+    "accuracy": 0.9647034628139541,
+    "precision": 0.06783719074221868,
+    "recall": 0.29310344827586204,
+    "f1": 0.1101749837977965,
+    "roc_auc": 0.8541654572232131,
+    "pr_auc_ap": 0.0542685346477227,
+    "brier": 0.00731360137646922,
+    "tn": 37441,
+    "fp": 1168,
+    "fn": 205,
+    "tp": 85
+  },
+  "brier_sin_calibrar": 0.007277618500996756,
+  "prevalencia_test": 0.007455204503971824,
+  "baseline_brier": 0.0073998891404331215,
+  "baseline_accuracy_siempre_vivo": 0.9925447954960281,
+  "particiones": {
+    "train": {
+      "filas": 81692,
+      "corridas": 24,
+      "muertes": 567
+    },
+    "calibracion": {
+      "filas": 19584,
+      "corridas": 6,
+      "muertes": 156
+    },
+    "validacion": {
+      "filas": 18276,
+      "corridas": 6,
+      "muertes": 170
+    },
+    "test": {
+      "filas": 38899,
+      "corridas": 12,
+      "muertes": 290
+    }
+  },
+  "intervalos_bootstrap_corrida_95": {
+    "recall": [
+      0.04130747734778559,
+      0.47282209612817105
+    ],
+    "precision": [
+      0.020997802790841107,
+      0.11750302796740807
+    ],
+    "f1": [
+      0.029541921767087077,
+      0.17884900958948932
+    ],
+    "pr_auc_ap": [
+      0.02001556133951344,
+      0.10435295310033497
+    ],
+    "brier": [
+      0.004647054383658564,
+      0.011761168761595064
+    ]
+  },
+  "control_negativo_ap_validacion": 0.01161646512768493,
+  "control_negativo_prevalencia_validacion": 0.009301816590063471,
+  "revision_necesaria": false,
+  "nota_accuracy": "En eventos raros accuracy >0.98 puede deberse a predecir siempre vivo; se compara con baseline."
+}

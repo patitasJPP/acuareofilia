@@ -1,0 +1,38 @@
+{
+  "semilla_base": 9022026,
+  "replicas_por_escenario": 16,
+  "horizontes_h": [
+    1,
+    6,
+    12
+  ],
+  "configuraciones": [
+    {
+      "max_depth": 3,
+      "n_estimators": 180,
+      "learning_rate": 0.05,
+      "peso": 1.0
+    },
+    {
+      "max_depth": 4,
+      "n_estimators": 240,
+      "learning_rate": 0.04,
+      "peso": 3.0
+    },
+    {
+      "max_depth": 5,
+      "n_estimators": 180,
+      "learning_rate": 0.05,
+      "peso": 6.0
+    }
+  ],
+  "seleccion_config": "AP media de GroupKFold(3) por corrida en train",
+  "seleccion_horizonte": "Mayor F2 de validacion; objetivos distintos, no equivalentes",
+  "politicas": [
+    "F2",
+    "recall80_validacion"
+  ],
+  "fin_h": 96,
+  "advertencia": "Mecanismo de mortalidad intacto. No optimizar usando test.",
+  "codigo_sha256": "651664cad64b38adfb501c697b8a4570c37e6bfbcaebf8ac5efe61bac453317e"
+}

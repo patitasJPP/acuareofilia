@@ -1,0 +1,7 @@
+{
+  "motor": "incremental_v1",
+  "semilla": 100000777,
+  "escenario": "estable",
+  "horas": 3,
+  "nota": "Datos simulados del motor; no son predicciones de XGBoost."
+}

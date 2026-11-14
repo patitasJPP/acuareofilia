@@ -1,0 +1,9 @@
+.venv/
+web/frontend/node_modules/
+datos/corridas/*.db
+datos/corridas/*.db-*
+datos/corridas/*.tmp
+resultados/exportaciones/*
+*.log
+.env
+__pycache__/

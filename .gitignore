@@ -1,0 +1,11 @@
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/node_modules/
+**/.env
+**/*.log
+**/*.pid
+**/*.tmp
+**/*.db
+**/*.db-shm
+**/*.db-wal

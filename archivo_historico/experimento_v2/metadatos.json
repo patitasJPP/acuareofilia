@@ -1,0 +1,17 @@
+{
+  "version": "experimento_v2",
+  "fuente_fichas": "C:\\Users\\jairp\\Desktop\\Peses\\exportaciones\\MEGA_DATOS_ML.csv",
+  "sha256_fichas_origen": "169cded2d77b04f091c03d5966d04bca114830af48d69ca0f9dbfe3140754e58",
+  "sha256_codigo": "d6b49e16c3a254789ad6e4167b51f425b3f68d1f24070c97b4a535b3834d4b29",
+  "filas": 158451,
+  "horas_por_corrida": 96,
+  "replicas_por_escenario": 8,
+  "python": "3.13.7",
+  "numpy": "2.3.2",
+  "fuentes": {
+    "amoniaco": "https://www.epa.gov/wqc/aquatic-life-criteria-ammonia",
+    "especiacion": "https://www.epa.gov/sites/default/files/2019-02/documents/update-wqc-ammonia-1998.pdf",
+    "calibracion": "https://scikit-learn.org/stable/modules/calibration.html"
+  },
+  "advertencia": "Datos simulados; todos los parametros de mortalidad y escenario son supuestos universitarios."
+}

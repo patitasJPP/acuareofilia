@@ -1,35 +1,21 @@
-# Consulta de peceras
+# Pisciber BSF
 
-Aplicación de escritorio en Python que consulta datos de peceras en PostgreSQL y los muestra en una tabla.
+Abre **INICIAR.bat** para ejecutar la aplicación. Dirección: http://127.0.0.1:8000.
 
-## Configurar la conexión
+## Carpetas principales
 
-Edita las constantes en `database.py`:
+- **proycto innovador/**: aplicación vigente. Incluye web, motor, modelos, datos, resultados y documentación.
+- **archivo_historico/**: experimentos anteriores, notebooks de Colab e informes de referencia.
 
-- `HOST`: servidor PostgreSQL.
-- `PUERTO`: puerto (por defecto, `5432`).
-- `BASE_DATOS`: nombre de la base de datos.
-- `USUARIO` y `CONTRASENA`: credenciales de PostgreSQL.
+Dentro de la aplicación:
 
-La función `conectar_bd()` centraliza la conexión y la usa la aplicación.
+- web/: React y API Python.
+- simulacion/: motor, modelos entrenados y datos base.
+- datos/: corridas y checkpoints guardados.
+- resultados/: Excel, capturas y salidas del simulador independiente.
+- documentacion/: guía de presentación, estructura y verificaciones.
+- herramientas/: utilidades de mantenimiento.
 
-## Instalar y ejecutar
+La configuración privada permanece en proycto innovador/.env y no se incluye en Git. Tampoco se versionan dependencias instaladas, cachés, logs ni archivos temporales.
 
-Requiere Python 3 y PostgreSQL accesible con las credenciales configuradas.
-
-```powershell
-py -m pip install -r requirements.txt
-py consultar_peceras.py
-```
-
-La ventana presenta los resultados de la consulta con encabezados y barras de desplazamiento. Si ocurre un error de conexión o SQL, muestra una alerta.
-
-## Consulta
-
-Lee peceras, estado del agua, equipos, especies, peces y alimentos mediante `LEFT JOIN`. Calcula la biomasa en kilogramos y ordena los resultados por pecera y especie.
-
-## Archivos
-
-- `consultar_peceras.py`: consulta PostgreSQL y muestra la ventana.
-- `database.py`: credenciales y función de conexión.
-- `requirements.txt`: dependencia Psycopg para PostgreSQL.
+La limpieza se realiza después del commit de organización. Las copias idénticas retiradas se registran en proycto innovador/documentacion/LIMPIEZA.md.

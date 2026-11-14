@@ -1,0 +1,29 @@
+columna,motivo
+vivo,Inverso de murio; solo se usa murio para elegibilidad
+salud,Estado contemporaneo excluido por el prompt; se conserva solo salud_lag1
+riesgo_muerte,Derivado de salud y forzado a 1 en registros de muerte
+punto_critico,El generador fuerza 1 en filas de muerte
+danos_acumulados,Estado contemporaneo excluido; se conserva solo danos_acumulados_lag1
+nivel_estres,"Resumen ambiental derivado; exclusion conservadora solicitada, no fuga futura demostrada"
+nivel_estres_cat,Categoria del dano ambiental; exclusion conservadora solicitada
+dano_total,Suma de desvios ambientales; exclusion conservadora solicitada
+ox_desvio,Exclusion solicitada; su constancia se informa en auditoria
+dano_oxigeno,Exclusion solicitada; su constancia se informa en auditoria
+ox_critico,Exclusion solicitada; su constancia se informa en auditoria
+sobrepoblacion,Exclusion solicitada; su constancia se informa en auditoria
+tiene_filtro,Exclusion solicitada; su constancia se informa en auditoria
+tiene_aireacion,Exclusion solicitada; su constancia se informa en auditoria
+ph_desvio,Redundante con dano_ph
+temp_desvio,Redundante con dano_temp
+nh3_desvio,Redundante con dano_amoniaco
+pez_id,"Identificador/metadato, no predictor"
+pecera_id,"Identificador/metadato, no predictor"
+pecera_nombre,"Identificador/metadato, no predictor"
+especie_id,"Identificador/metadato, no predictor"
+hora_sim,"Identificador/metadato, no predictor"
+murio,"Se usa para elegibilidad y etiqueta futura, no como predictor"
+causa_riesgo_principal,Resumen ambiental redundante; no fuga directa segun generador
+temp_max,Correlacion > 0.95 con temp_min en entrenamiento
+dano_amoniaco,Correlacion > 0.95 con amoniaco en entrenamiento
+filtro_mg_h,Correlacion > 0.95 con volumen_l en entrenamiento
+aireacion_mg_h,Correlacion > 0.95 con volumen_l en entrenamiento
