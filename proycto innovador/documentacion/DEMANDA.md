@@ -105,7 +105,7 @@ Los filtros recalculan las métricas sobre los casos correspondientes. El error 
 - `datos/ventas`: historial diario y agregado semanal.
 - `resultados/demanda`: informe, calibración, prueba y pronóstico futuro.
 - `web/backend/demand.py`: consulta de resultados y descarga ZIP.
-- `web/frontend/src/Demand.jsx`: vista de ventas y demanda.
+- `web/frontend/src/features/demanda/Demand.jsx`: vista de ventas y demanda.
 - `web/backend/test_demand.py`: pruebas de datos, separación temporal, agregados, descarga y API.
 
 ## 9. Cómo repetirlo
@@ -173,4 +173,4 @@ Cada semana se guarda en una transacción SQLite que conserva juntos el motor al
 
 Con una sesión seleccionada, **Descargar todos los datos** entrega un ZIP con historial diario y semanal completo, pronósticos emitidos con fecha de corte, evaluación con resultados pendientes vacíos y metadatos de la sesión. Para respaldar las sesiones conserva `datos/ventas/en_vivo.db` con el servidor detenido. Para respaldar también el experimento inicial conserva los CSV, informe y modelos comerciales.
 
-Los archivos nuevos son `web/backend/demand_live.py`, `web/frontend/src/DemandLive.jsx` y `web/backend/test_demand_live.py`. El motor `MercadoSemanal` en `demanda/generar.py` sirve tanto para reproducir las 104 semanas iniciales como para continuar generando nuevas semanas.
+Los archivos del reloj comercial son `web/backend/demand_live.py`, `web/frontend/src/features/demanda/DemandLive.jsx` y `web/backend/test_demand_live.py`. El motor `MercadoSemanal` en `demanda/generar.py` sirve tanto para reproducir las 104 semanas iniciales como para continuar generando nuevas semanas.

@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import './laboratory.css';
+import './simulation.css';
 
 export const defaultConfig={intensidad:'moderado',inicio:24,duracion:18,sensores:'normal',peceras:[
  {especie:'Tilapia',peces:16,volumen_l:1500},{especie:'Carpa',peces:16,volumen_l:1800},{especie:'Gamitana',peces:16,volumen_l:1800}]};

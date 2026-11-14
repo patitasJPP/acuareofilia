@@ -1,11 +1,11 @@
 import React, {useState,useEffect,useRef,useId} from 'react';
 import {createRoot} from 'react-dom/client';
 import {Waves,LayoutDashboard,Fish,ChartNoAxesCombined,FlaskConical,ArrowUpRight,ArrowDownToLine,ArrowRight,ChevronDown,ChevronLeft,ChevronRight,X,Check,LoaderCircle,Info,TriangleAlert,Activity,Droplets,Thermometer,Wind,Play,Pause,RefreshCw,Radio} from 'lucide-react';
-import './style.css';
-import './live.css';
-import {RunStatistics,Tracking,ScenarioComparison} from './Insights';
-import {Configuration,EvaluationV2,defaultConfig} from './Laboratory';
-import Demand from './Demand';
+import './styles/global.css';
+import './styles/live.css';
+import {RunStatistics,Tracking,ScenarioComparison} from './features/mortalidad/Insights';
+import {Configuration,EvaluationV2,defaultConfig} from './features/simulacion/SimulationPanels';
+import Demand from './features/demanda/Demand';
 
 const labels={"estable": "Condiciones estables (sin incidentes)", "amonio": "Acumulación de amoníaco en el agua", "hipoxia": "Falta de oxígeno por falla de aireación", "termico": "Aumento de temperatura del agua", "ph": "Aumento del pH del agua", "combinado": "Amoníaco alto, oxígeno bajo, temperatura y pH elevados"};
 const pct=(n,d=1)=>n==null?'—':new Intl.NumberFormat('es-PE',{style:'percent',maximumFractionDigits:d}).format(n??0);
